@@ -1,0 +1,21 @@
+{
+  "name": "homelab",
+  "version": "1.0.0",
+  "description": "System for remote management of containers",
+  "main": "src/index.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srwesleyramos/homelab.git"
+  },
+  "author": "Wesley Ramos <dev.wesleygabriel@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/srwesleyramos/homelab/issues"
+  },
+  "homepage": "https://github.com/srwesleyramos/homelab#readme",
+  "dependencies": {
+    "dockerode": "^3.3.5"
+  }
+}
