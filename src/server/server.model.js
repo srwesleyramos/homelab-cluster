@@ -19,14 +19,13 @@ class ServerModel {
         this.state_blocked = false
         this.state_suspend = data.state_suspend
 
-        this.created = data.created
-        this.updated = data.updated
-
         this.init()
     }
 
     init() {
         this.container = new Container(this)
+        this.websocket = new WebSocket(this)
+
         this.statistics = {}
     }
 
@@ -52,9 +51,13 @@ class ServerModel {
             await this.container.create()
 
             this.state_blocked = false
-        } catch (error) {
+        } catch (err) {
             this.state_blocked = false
-            throw error
+
+            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a criação:')
+            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
+
+            throw err
         }
     }
 
@@ -76,9 +79,13 @@ class ServerModel {
             await this.container.delete()
 
             this.state_blocked = false
-        } catch (error) {
+        } catch (err) {
             this.state_blocked = false
-            throw error
+
+            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a remoção:')
+            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
+
+            throw err
         }
     }
 
@@ -97,9 +104,13 @@ class ServerModel {
             await this.container.start()
             await this.container.attach()
             await this.container.stats()
-        } catch (error) {
+        } catch (err) {
             await this.kill()
-            throw error
+
+            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a inicialização:')
+            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
+
+            throw err
         }
     }
 
@@ -120,9 +131,13 @@ class ServerModel {
             } else {
                 await this.container.write(this.getFinishCommand())
             }
-        } catch (error) {
+        } catch (err) {
             await this.kill()
-            throw error
+
+            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a finalização:')
+            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
+
+            throw err
         }
     }
 
@@ -141,8 +156,11 @@ class ServerModel {
             await this.container.kill()
 
             this.sendStatus(State.OFFLINE)
-        } catch (error) {
-            throw error
+        } catch (err) {
+            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a finalização:')
+            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
+
+            throw err
         }
     }
 
@@ -165,8 +183,11 @@ class ServerModel {
             } else {
                 await this.container.write(command)
             }
-        } catch (error) {
-            throw error
+        } catch (err) {
+            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar o comando:')
+            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
+
+            throw err
         }
     }
 
@@ -175,7 +196,15 @@ class ServerModel {
             this.sendStatus(State.ONLINE)
         }
 
-        // TODO: enviar logs via websocket
+        this.websocket.emit('console', message)
+    }
+
+    async sendCrashReport() {
+        if (this.state === State.ONLINE) {
+            // TODO: executar detecção de crash
+        }
+
+        this.sendStatus(State.OFFLINE)
     }
 
     async sendHardware(stats) {
@@ -185,7 +214,7 @@ class ServerModel {
             this.container.kill()
         }
 
-        // TODO: enviar stats via websocket
+        this.websocket.emit('statistics', JSON.stringify(stats))
     }
 
     async sendStatus(state) {
@@ -199,15 +228,7 @@ class ServerModel {
             // TODO: encerrar verificações de espaço em disco
         }
 
-        // TODO: enviar state via websocket
-    }
-
-    async sendShutdown() {
-        if (this.state === State.ONLINE) {
-            // TODO: executar detecção de crash
-        }
-
-        this.sendStatus(State.OFFLINE)
+        this.websocket.emit('console', `[Daemon Lab] [INFO]: o servidor foi classificado como ${state}`)
     }
 
     async isStorageLimited() {

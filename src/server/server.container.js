@@ -13,9 +13,9 @@ class ServerContainer {
 
     init() {
         this.isRunning().then((running) => {
-            const state = running ? State.ONLINE : State.OFFLINE
-
-            this.server.sendStatus(state)
+            this.server.sendStatus(running ? State.ONLINE : State.OFFLINE)
+        }).catch(() => {
+            this.server.sendStatus(State.OFFLINE)
         })
     }
 
@@ -26,15 +26,18 @@ class ServerContainer {
     create() {
         return new Promise((resolve, reject) => {
             const Env = [
-                `STARTS_COMMAND=${this.server.getStartsCommand()}`,
+                `CPU_LIMIT=${this.server.cpu_limit}`,
+                `DISK_LIMIT=${this.server.disk_limit}`,
                 `FINISH_COMMAND=${this.server.getFinishCommand()}`,
+                `RAM_LIMIT=${this.server.ram_limit}`,
+                `STARTS_COMMAND=${this.server.getStartsCommand()}`,
                 ...this.server.image_environment.split(',')
             ]
 
             const options = {
+                AttachStderr: true,
                 AttachStdin: true,
                 AttachStdout: true,
-                AttachStderr: true,
                 Env,
 
                 HostConfig: {
@@ -171,12 +174,16 @@ class ServerContainer {
     attach() {
         const container = client.getContainer(this.server.uuid)
 
+        if (this.attach_stream) {
+            this.attach_stream = undefined
+        }
+
         return new Promise((resolve, reject) => {
             const options = {
-                stream: true,
-                stdout: true,
                 stderr: true,
-                stdin: true
+                stdin: true,
+                stdout: true,
+                stream: true
             }
 
             container.attach(options, (err, stream) => {
@@ -193,7 +200,7 @@ class ServerContainer {
                 this.attach_stream.on('end', () => {
                     this.attach_stream = undefined
 
-                    this.server.sendShutdown()
+                    this.server.sendCrashReport()
                 })
 
                 resolve()
@@ -203,6 +210,10 @@ class ServerContainer {
 
     stats() {
         const container = client.getContainer(this.server.uuid)
+
+        if (this.stats_stream) {
+            this.stats_stream = undefined
+        }
 
         return new Promise((resolve, reject) => {
             const options = {
@@ -233,10 +244,14 @@ class ServerContainer {
 
     write(command) {
         return new Promise((resolve, reject) => {
+            if (!this.attach_stream) {
+                return reject(new Error('Não foi possível se comunicar com o servidor.'))
+            }
+
             try {
                 this.attach_stream.write(`${command}\n`)
-            } catch (error) {
-                return reject(new Error('Não foi possível se comunicar com o servidor.'))
+            } catch (err) {
+                return reject(err)
             }
 
             resolve()

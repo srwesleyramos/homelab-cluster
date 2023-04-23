@@ -36,16 +36,16 @@ class BackupModel {
     async create() {
         try {
             this.stored = await Files.zip(this.srv_uri, this.srv_zip)
-        } catch (error) {
-            throw error
+        } catch (err) {
+            throw err
         }
     }
 
     async delete() {
         try {
             this.stored = await Files.delete(this.srv_zip)
-        } catch (error) {
-            throw error
+        } catch (err) {
+            throw err
         }
     }
 

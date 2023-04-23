@@ -1,6 +1,6 @@
 module.exports = {
-    STOPPING: 0,
-    OFFLINE: 1,
-    STARTING: 2,
-    ONLINE: 3
+    STOPPING: 'STOPPING',
+    OFFLINE: 'OFFLINE',
+    STARTING: 'STARTING',
+    ONLINE: 'ONLINE'
 }
