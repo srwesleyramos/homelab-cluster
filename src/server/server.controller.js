@@ -1,5 +1,5 @@
 const ServerCache = new Map()
-const ServerModel = require('./server.model.js')
+const ServerModel = require('./server.model')
 
 class ServerController {
 

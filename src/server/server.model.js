@@ -1,8 +1,8 @@
-const Container = require('./server.container.js')
-const Files = require('../helper.js')
-const Image = require('../image/image.controller.js')
-const State = require('./server.state.js')
-const Thread = require('./server.thread.js')
+const Container = require('./server.container')
+const Files = require('../helper')
+const Image = require('../image/image.controller')
+const State = require('./server.state')
+const Thread = require('./server.thread')
 
 class ServerModel {
 

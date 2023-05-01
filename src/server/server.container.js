@@ -1,5 +1,5 @@
 const Docker = require('dockerode')
-const State = require('./server.state.js')
+const State = require('./server.state')
 
 const client = new Docker()
 
@@ -106,7 +106,8 @@ class ServerContainer {
                 Image: this.server.image.name,
                 name: this.server.uuid,
                 OpenStdin: true,
-                Tty: true
+                Tty: true,
+                User: 'container'
             }
 
             client.createContainer(options, (err) => {
