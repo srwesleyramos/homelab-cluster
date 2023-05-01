@@ -1,38 +1,65 @@
-const ImageCache = new Map()
-const ImageModel = require('./image.model.js')
+const ConflictError = require('../errors/conflict.error')
+const ImageEntity = require('./image.entity')
+const ImageMemory = require('./image.memory')
+const MissingError = require('../errors/missing.error')
+const RefusedError = require("../errors/refused.error")
 
 class ImageController {
 
-    async initialize() {
-        console.info(` OK! O controlador de imagens foi carregado com êxito.`)
+    initialize() {
+        try {
+            this.memory = new ImageMemory()
+            this.memory.setup()
+
+            console.info(`.  OK! O controlador de imagens foi carregado com êxito.     .`)
+        } catch (err) {
+            throw err
+        }
     }
 
     async createImage(data) {
-        if (ImageCache.has(data.uuid)) {
-            throw new Error('a imagem já está cadastrada no sistema.')
+        if (this.memory.exists(data)) {
+            throw new ConflictError('a imagem já está cadastrada no sistema.')
         }
 
-        const image = new ImageModel(data)
-        await image.create()
+        const entity = new ImageEntity(data)
+        await entity.create()
 
-        ImageCache.set(image.uuid, image)
-
-        return image
+        return this.memory.create(entity)
     }
 
-    async deleteImage(uuid) {
-        if (!ImageCache.has(data.uuid)) {
-            throw new Error('a imagem não está cadastrada no sistema.')
+    async deleteImage(data) {
+        if (!this.memory.exists(data)) {
+            throw new MissingError('a imagem não está cadastrada no sistema.')
         }
 
-        const image = this.getImageById(uuid)
-        await image.delete()
+        const entity = this.memory.restore(data)
+        await entity.delete()
 
-        ImageCache.delete(image.uuid)
+        return this.memory.delete(entity)
     }
 
-    getImageById(uuid) {
-        return ImageCache.get(uuid)
+    async updateImage(data) {
+        if (data.created || data.updated) {
+            throw new RefusedError('os atributos `created` e `updated` são inalteráveis.')
+        }
+
+        if (!this.memory.exists(data)) {
+            throw new MissingError('a imagem não está cadastrada no sistema.')
+        }
+
+        const oldest = this.memory.restore(data)
+
+        const entity = new ImageEntity({
+            ...oldest,
+            ...data
+        })
+
+        if (entity.name !== oldest.name) {
+            await entity.create()
+        }
+
+        return this.memory.update(entity)
     }
 }
 

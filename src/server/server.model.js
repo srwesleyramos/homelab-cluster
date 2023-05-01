@@ -1,6 +1,8 @@
 const Container = require('./server.container.js')
-const Files = require('../helper/files.helper.js')
+const Files = require('../helper.js')
+const Image = require('../image/image.controller.js')
 const State = require('./server.state.js')
+const Thread = require('./server.thread.js')
 
 class ServerModel {
 
@@ -24,7 +26,8 @@ class ServerModel {
 
     init() {
         this.container = new Container(this)
-        this.websocket = new WebSocket(this)
+        this.image = Image.getImagesById(this.image_uuid)
+        this.thread = new Thread(this)
 
         this.statistics = {}
     }
@@ -38,7 +41,7 @@ class ServerModel {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
-        if (await this.container.isCreated() || await this.getDockerImage().isDeleted()) {
+        if (await this.container.exists() || !await this.image.exists()) {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
@@ -53,10 +56,6 @@ class ServerModel {
             this.state_blocked = false
         } catch (err) {
             this.state_blocked = false
-
-            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a criação:')
-            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
-
             throw err
         }
     }
@@ -66,7 +65,7 @@ class ServerModel {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
-        if (await this.container.isDeleted()) {
+        if (!await this.container.exists()) {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
@@ -81,10 +80,6 @@ class ServerModel {
             this.state_blocked = false
         } catch (err) {
             this.state_blocked = false
-
-            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a remoção:')
-            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
-
             throw err
         }
     }
@@ -94,22 +89,18 @@ class ServerModel {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
-        if (await this.container.isDeleted() || await this.isStorageLimited()) {
+        if (!await this.container.exists() || await this.isStorageLimited()) {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
         try {
-            this.sendStatus(State.STARTING)
+            await this.sendStatus(State.STARTING)
 
             await this.container.start()
             await this.container.attach()
             await this.container.stats()
         } catch (err) {
             await this.kill()
-
-            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a inicialização:')
-            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
-
             throw err
         }
     }
@@ -119,24 +110,20 @@ class ServerModel {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
-        if (await this.container.isDeleted()) {
+        if (!await this.container.exists()) {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
         try {
-            this.sendStatus(State.STOPPING)
+            await this.sendStatus(State.STOPPING)
 
-            if (this.getFinishCommand() === '^C') {
+            if (this.image.finish_command === '^C') {
                 await this.stop()
             } else {
-                await this.container.write(this.getFinishCommand())
+                await this.container.write(this.image.finish_command)
             }
         } catch (err) {
             await this.kill()
-
-            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a finalização:')
-            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
-
             throw err
         }
     }
@@ -146,20 +133,17 @@ class ServerModel {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
-        if (await this.container.isDeleted()) {
+        if (!await this.container.exists()) {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
         try {
-            this.sendStatus(State.STOPPING)
+            await this.sendStatus(State.STOPPING)
 
             await this.container.kill()
 
-            this.sendStatus(State.OFFLINE)
+            await this.sendStatus(State.OFFLINE)
         } catch (err) {
-            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar a finalização:')
-            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
-
             throw err
         }
     }
@@ -173,27 +157,24 @@ class ServerModel {
             throw new Error('o servidor recusou esta operação, tente novamente em breve.')
         }
 
-        if (await this.container.isDeleted()) {
+        if (!await this.container.exists()) {
             return new Error('o servidor precisa existir e estar instalado na máquina.')
         }
 
         try {
-            if (this.getFinishCommand() === command) {
+            if (this.image.finish_command === command) {
                 await this.stop()
             } else {
                 await this.container.write(command)
             }
         } catch (err) {
-            this.websocket.emit('console', '[Daemon Lab] [ERROR]: aconteceu um problema ao tentar executar o comando:')
-            this.websocket.emit('console', `[Daemon Lab] [ERROR]: ${err}`)
-
             throw err
         }
     }
 
     async sendConsole(message) {
         if (this.state === State.STARTING && message.includes(this.image_detector)) {
-            this.sendStatus(State.ONLINE)
+            await this.sendStatus(State.ONLINE)
         }
 
         this.websocket.emit('console', message)
@@ -204,14 +185,14 @@ class ServerModel {
             // TODO: executar detecção de crash
         }
 
-        this.sendStatus(State.OFFLINE)
+        await this.sendStatus(State.OFFLINE)
     }
 
     async sendHardware(stats) {
         this.statistics = stats
 
         if (this.state_blocked || this.state_suspend || this.state === State.OFFLINE) {
-            this.container.kill()
+            await this.container.kill()
         }
 
         this.websocket.emit('statistics', JSON.stringify(stats))
@@ -221,39 +202,20 @@ class ServerModel {
         this.state = state
 
         if (this.state === State.STARTING || this.state === State.ONLINE) {
-            // TODO: iniciar verificações de espaço em disco
+            this.thread.start()
         }
 
         if (this.state === State.STOPPING || this.state === State.OFFLINE) {
-            // TODO: encerrar verificações de espaço em disco
+            this.thread.stop()
         }
 
-        this.websocket.emit('console', `[Daemon Lab] [INFO]: o servidor foi classificado como ${state}`)
+        this.websocket.emit('status', state)
     }
 
     async isStorageLimited() {
         const size = await Files.size('/etc/homelab/volumes', this.uuid)
 
         return size > this.disk_limit * 1024 * 1024
-    }
-
-    /*
-     * Área de utilidades gerais do servidor
-     */
-
-    getDockerImage() {
-        const Images = require('../image/image.controller.js')
-        const image = Images.getImageById(this.image_uuid)
-
-        return image
-    }
-
-    getStartsCommand() {
-        return this.getDockerImage().starts_command
-    }
-
-    getFinishCommand() {
-        return this.getDockerImage().finish_command
     }
 }
 

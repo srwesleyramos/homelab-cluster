@@ -12,10 +12,14 @@ class ServerContainer {
     }
 
     init() {
-        this.isRunning().then((running) => {
-            this.server.sendStatus(running ? State.ONLINE : State.OFFLINE)
-        }).catch(() => {
-            this.server.sendStatus(State.OFFLINE)
+        const container = client.getContainer(this.server.uuid)
+
+        container.inspect((err, data) => {
+            if (data?.State?.Running === true) {
+                this.server.sendStatus(State.ONLINE)
+            } else {
+                this.server.sendStatus(State.OFFLINE)
+            }
         })
     }
 
@@ -28,9 +32,9 @@ class ServerContainer {
             const Env = [
                 `CPU_LIMIT=${this.server.cpu_limit}`,
                 `DISK_LIMIT=${this.server.disk_limit}`,
-                `FINISH_COMMAND=${this.server.getFinishCommand()}`,
+                `FINISH_COMMAND=${this.server.image.finish_command}`,
                 `RAM_LIMIT=${this.server.ram_limit}`,
-                `STARTS_COMMAND=${this.server.getStartsCommand()}`,
+                `STARTS_COMMAND=${this.server.image.starts_command}`,
                 ...this.server.image_environment.split(',')
             ]
 
@@ -99,7 +103,7 @@ class ServerContainer {
                 },
 
                 Hostname: this.server.uuid,
-                Image: this.server.getDockerImage()?.name,
+                Image: this.server.image.name,
                 name: this.server.uuid,
                 OpenStdin: true,
                 Tty: true
@@ -115,11 +119,7 @@ class ServerContainer {
         const container = client.getContainer(this.server.uuid)
 
         return new Promise((resolve, reject) => {
-            const options = {
-                force: true
-            }
-
-            container.remove(options, (err) => {
+            container.remove({force: true}, (err) => {
                 err ? reject(err) : resolve()
             })
         })
@@ -262,42 +262,12 @@ class ServerContainer {
      * Área de utilidades gerais do container
      */
 
-    isCreated() {
+    exists() {
         const container = client.getContainer(this.server.uuid)
 
         return new Promise((resolve) => {
             container.inspect((err) => {
                 resolve(err === null)
-            })
-        })
-    }
-
-    isDeleted() {
-        const container = client.getContainer(this.server.uuid)
-
-        return new Promise((resolve) => {
-            container.inspect((err) => {
-                resolve(err !== null)
-            })
-        })
-    }
-
-    isRunning() {
-        const container = client.getContainer(this.server.uuid)
-
-        return new Promise((resolve) => {
-            container.inspect((err, data) => {
-                resolve(err === null && data?.State?.Running === true)
-            })
-        })
-    }
-
-    isStopped() {
-        const container = client.getContainer(this.server.uuid)
-
-        return new Promise((resolve) => {
-            container.inspect((err, data) => {
-                resolve(err === null && data?.State?.Status === 'exited')
             })
         })
     }

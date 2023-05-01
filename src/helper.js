@@ -70,7 +70,7 @@ class FilesHelper {
 
     unzip(source, target) {
         return new Promise((resolve, reject) => {
-            Proc.exec(`unzip "${source}" -d "${target}"`, (err) => {
+            Proc.exec(`rm -r ${target}/* && unzip "${source}" -d "${target}"`, (err) => {
                 err ? reject(err) : resolve()
             })
         })

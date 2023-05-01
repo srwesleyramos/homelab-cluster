@@ -1,14 +1,8 @@
 const { Server } = require('socket.io')
 
 class WebSocketModel {
-    constructor(http_server) {
-        this.http_server = http_server
-    }
-
-    init() {
-        this.io = new Server(this.http_server)
-
-        return this
+    constructor(httpServer) {
+        this.io = new Server(httpServer)
     }
 
     on(event, fn) {

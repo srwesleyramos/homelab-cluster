@@ -8,8 +8,7 @@ class WebSocketController {
     async initialize() {
         this.socket = new WebsocketModel(this.httpServer);
         this.setupEvents()
-        
-        console.log(' OK! O controlador de websockets foi carregado com êxito.')
+        console.log('.  OK! O controlador de websockets foi carregado com êxito.  .')
     }
 
     setupEvents() {

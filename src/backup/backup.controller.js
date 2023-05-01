@@ -1,38 +1,52 @@
-const BackupCache = new Map()
-const BackupModel = require('./backup.model.js')
+const ConflictError = require('../errors/conflict.error')
+const BackupEntity = require('./backup.entity')
+const BackupMemory = require('./backup.memory')
+const MissingError = require('../errors/missing.error')
 
 class BackupController {
 
-    async initialize() {
-        console.info(` OK! O controlador de cópias foi carregado com êxito.`)
+    initialize() {
+        try {
+            this.memory = new BackupMemory()
+            this.memory.setup()
+
+            console.info(`.  OK! O controlador de cópias foi carregado com êxito.      .`)
+        } catch (err) {
+            throw err
+        }
     }
 
     async createBackup(data) {
-        if (BackupCache.has(data.uuid)) {
-            throw new Error('a cópia já está cadastrada no sistema.')
+        if (this.memory.exists(data)) {
+            throw new ConflictError('a cópia já está cadastrada no sistema.')
         }
 
-        const backup = new BackupModel(data)
-        await backup.create()
+        const entity = new BackupEntity(data)
+        await entity.create()
 
-        BackupCache.set(backup.uuid, backup)
-
-        return backup
+        return this.memory.create(entity)
     }
 
-    async deleteBackup(uuid) {
-        if (!BackupCache.has(data.uuid)) {
-            throw new Error('a cópia já está cadastrada no sistema.')
+    async deleteBackup(data) {
+        if (!this.memory.exists(data)) {
+            throw new MissingError('a cópia não está cadastrada no sistema.')
         }
 
-        const backup = BackupCache.get(uuid)
-        await backup.delete()
+        const entity = this.memory.restore(data)
+        await entity.delete()
 
-        BackupCache.delete(uuid)
+        return this.memory.delete(entity)
     }
 
-    getBackupById(uuid) {
-        return BackupCache.get(uuid)
+    async exportBackup(data) {
+        if (!this.memory.exists(data)) {
+            throw new MissingError('a cópia não está cadastrada no sistema.')
+        }
+
+        const entity = this.memory.restore(data)
+        await entity.export()
+
+        return this.memory.update(entity)
     }
 }
 

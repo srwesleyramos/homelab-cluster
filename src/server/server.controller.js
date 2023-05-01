@@ -4,7 +4,7 @@ const ServerModel = require('./server.model.js')
 class ServerController {
 
     async initialize() {
-        console.info(` OK! O controlador de servidores foi carregado com êxito.`)
+        console.info(`.  OK! O controlador de servidores foi carregado com êxito.  .`)
     }
 
     async createServer(data) {
@@ -16,12 +16,10 @@ class ServerController {
         await server.create()
 
         ServerCache.set(server.uuid, server)
-
-        return server
     }
 
     async deleteServer(uuid) {
-        if (!ServerCache.has(data.uuid)) {
+        if (!ServerCache.has(uuid)) {
             throw new Error('o servidor não está cadastrado no sistema.')
         }
 
@@ -31,7 +29,7 @@ class ServerController {
         ServerCache.delete(server.uuid)
     }
 
-    getServerById(uuid) {
+    getServersById(uuid) {
         return ServerCache.get(uuid)
     }
 }
