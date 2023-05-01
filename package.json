@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "System for remote management of containers",
   "main": "src/index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/srwesleyramos/homelab.git"
@@ -16,6 +15,8 @@
   },
   "homepage": "https://github.com/srwesleyramos/homelab#readme",
   "dependencies": {
-    "dockerode": "^3.3.5"
+    "dockerode": "^3.3.5",
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1"
   }
 }

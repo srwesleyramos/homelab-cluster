@@ -1,7 +1,8 @@
 const modules = [
     require('./image/image.controller.js'),
     require('./server/server.controller.js'),
-    require('./backup/backup.controller.js')
+    require('./backup/backup.controller.js'),
+    require('./http/http.controller.js'),
 ]
 
 async function start() {
@@ -20,4 +21,4 @@ async function start() {
     console.info('                                                             ')
 }
 
-start().then(test)
+start()
