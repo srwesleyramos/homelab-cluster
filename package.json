@@ -1,0 +1,21 @@
+{
+  "name": "union-cluster",
+  "version": "1.0.0",
+  "description": "System for remote management of containers.",
+  "main": "src/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/srwesleyramos/union-cluster.git"
+  },
+  "author": "Wesley Ramos <dev.wesleygabriel@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/srwesleyramos/union-cluster/issues"
+  },
+  "homepage": "https://github.com/srwesleyramos/union-cluster#readme",
+  "dependencies": {
+    "dockerode": "^3.3.5",
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6"
+  }
+}
