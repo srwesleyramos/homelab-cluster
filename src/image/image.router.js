@@ -1,4 +1,5 @@
 const control = require('./image.controller')
+const unique = require('uuid')
 const express = require('express')
 
 const MethodError = require("../errors/method.error")
@@ -7,6 +8,7 @@ class ImageRouter {
 
     constructor() {
         this.router = express.Router()
+        this.router.use(this.validate)
 
         this.router.post('/create/', this.create)
         this.router.post('/delete/', this.delete)
@@ -18,7 +20,7 @@ class ImageRouter {
 
     async create(req, res, next) {
         if (!req.body.uuid || !req.body.name || !req.body.starts_command || !req.body.finish_command) {
-            return next(new MethodError('o corpo da requisição está incompleto.'))
+            return next(new MethodError('o corpo da requisição está incompleto. (2)'))
         }
 
         try {
@@ -36,7 +38,7 @@ class ImageRouter {
 
     async delete(req, res, next) {
         if (!req.body.uuid) {
-            return next(new MethodError('o corpo da requisição está incompleto.'))
+            return next(new MethodError('o corpo da requisição está incompleto. (2)'))
         }
 
         try {
@@ -53,8 +55,8 @@ class ImageRouter {
     }
 
     async update(req, res, next) {
-        if (!req.body.uuid) {
-            return next(new MethodError('o corpo da requisição está incompleto.'))
+        if (!req.body.uuid || !req.body.name || !req.body.starts_command || !req.body.finish_command) {
+            return next(new MethodError('o corpo da requisição está incompleto. (2)'))
         }
 
         try {
@@ -80,6 +82,14 @@ class ImageRouter {
         }))
 
         res.json(response)
+    }
+
+    validate(req, res, next) {
+        if (req.body.uuid && !unique.validate(req.body.uuid)) {
+            return next(new MethodError('o corpo da requisição está incompleto. (1)'))
+        }
+
+        return next()
     }
 }
 

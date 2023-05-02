@@ -90,6 +90,10 @@ class ImageMemory {
         })
     }
 
+    count(data) {
+        return Array.from(this.cached.values()).filter((i) => i.name === data.name).length
+    }
+
     exists(data) {
         return this.cached.has(data.uuid)
     }

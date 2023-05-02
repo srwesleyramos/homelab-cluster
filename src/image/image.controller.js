@@ -23,7 +23,10 @@ class ImageController {
         }
 
         const entity = new ImageEntity(data)
-        await entity.create()
+
+        if (this.memory.count(entity) === 0) {
+            await entity.create()
+        }
 
         return this.memory.create(entity)
     }
@@ -34,7 +37,10 @@ class ImageController {
         }
 
         const entity = this.memory.restore(data)
-        await entity.delete()
+
+        if (this.memory.count(entity) === 1) {
+            await entity.delete()
+        }
 
         return this.memory.delete(entity)
     }
