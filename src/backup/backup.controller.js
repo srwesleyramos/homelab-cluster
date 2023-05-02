@@ -1,14 +1,18 @@
 const ConflictError = require('../errors/conflict.error')
 const BackupEntity = require('./backup.entity')
 const BackupMemory = require('./backup.memory')
+const BackupThread = require('./backup.thread')
 const MissingError = require('../errors/missing.error')
 
 class BackupController {
 
     initialize() {
         try {
-            this.memory = new BackupMemory()
+            this.memory = new BackupMemory(this)
             this.memory.setup()
+
+            this.thread = new BackupThread(this)
+            this.thread.setup()
 
             console.info(`.  OK! O controlador de cópias foi carregado com êxito.      .`)
         } catch (err) {

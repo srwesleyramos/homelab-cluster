@@ -1,4 +1,3 @@
-const ConflictError = require('../errors/conflict.error')
 const Helper = require('../helper')
 const MissingError = require('../errors/missing.error')
 const Server = require('../server/server.controller')
@@ -34,10 +33,6 @@ class BackupEntity {
             throw new MissingError('o servidor fornecido não foi encontrado no sistema.')
         }
 
-        if (Helper.exists(this.file)) {
-            throw new ConflictError('a cópia fornecida já existe para este servidor.')
-        }
-
         if (this.data.state_blocked || this.data.state_suspend) {
             throw new RefusedError('o servidor recusou esta operação, tente novamente em breve.')
         }
@@ -55,10 +50,6 @@ class BackupEntity {
     }
 
     async delete() {
-        if (!Helper.exists(this.path)) {
-            throw new MissingError('o servidor fornecido não foi encontrado no sistema.')
-        }
-
         if (!Helper.exists(this.file)) {
             throw new MissingError('a cópia fornecida não existe para este servidor.')
         }
@@ -82,10 +73,6 @@ class BackupEntity {
     async export() {
         if (this.expires !== 0 && this.expires <= Date.now()) {
             throw new RefusedError('a cópia fornecida já expirou para este servidor.')
-        }
-
-        if (!Helper.exists(this.path)) {
-            throw new MissingError('o servidor fornecido não foi encontrado no sistema.')
         }
 
         if (!Helper.exists(this.file)) {
@@ -112,8 +99,8 @@ class BackupEntity {
      * Área de utilidades gerais do modelo
      */
 
-    isValid() {
-        return this.expires === 0 || this.expires >= Date.now()
+    isInvalid() {
+        return !Helper.exists(this.path) || !Helper.exists(this.file) || this.expires !== 0 && this.expires <= Date.now()
     }
 }
 

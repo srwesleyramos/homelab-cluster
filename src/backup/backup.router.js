@@ -1,4 +1,5 @@
 const control = require('./backup.controller')
+const unique = require('uuid')
 const express = require('express')
 
 const MethodError = require("../errors/method.error")
@@ -7,6 +8,7 @@ class BackupRouter {
 
     constructor() {
         this.router = express.Router()
+        this.router.use(this.validate)
 
         this.router.post('/create/', this.create)
         this.router.post('/delete/', this.delete)
@@ -17,8 +19,8 @@ class BackupRouter {
     }
 
     async create(req, res, next) {
-        if (!req.body.uuid || !req.body.server || isNaN(req.body.expires)) {
-            return next(new MethodError('o corpo da requisição está incompleto.'))
+        if (!req.body.uuid || !req.body.server || !req.body.expires) {
+            return next(new MethodError('o corpo da requisição está incompleto ou inválido. (4)'))
         }
 
         try {
@@ -36,7 +38,7 @@ class BackupRouter {
 
     async delete(req, res, next) {
         if (!req.body.uuid) {
-            return next(new MethodError('o corpo da requisição está incompleto.'))
+            return next(new MethodError('o corpo da requisição está incompleto ou inválido. (4)'))
         }
 
         try {
@@ -54,7 +56,7 @@ class BackupRouter {
 
     async export(req, res, next) {
         if (!req.body.uuid) {
-            return next(new MethodError('o corpo da requisição está incompleto.'))
+            return next(new MethodError('o corpo da requisição está incompleto ou inválido. (4)'))
         }
 
         try {
@@ -80,6 +82,22 @@ class BackupRouter {
         }))
 
         res.json(response)
+    }
+
+    validate(req, res, next) {
+        if (req.body.uuid && !unique.validate(req.body.uuid)) {
+            return next(new MethodError('o corpo da requisição está incompleto ou inválido. (1)'))
+        }
+
+        if (req.body.expires && isNaN(req.body.expires)) {
+            return next(new MethodError('o corpo da requisição está incompleto ou inválido. (2)'))
+        }
+
+        if (req.body.server && !unique.validate(req.body.server)) {
+            return next(new MethodError('o corpo da requisição está incompleto ou inválido. (3)'))
+        }
+
+        return next()
     }
 }
 
