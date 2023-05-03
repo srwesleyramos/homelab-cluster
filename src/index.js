@@ -1,5 +1,5 @@
 const modules = [
-    require('./image/image.controller'),
+    require('./images/image.controller'),
     require('./server/server.controller'),
     require('./backup/backup.controller'),
     require('./routes/http.controller')
