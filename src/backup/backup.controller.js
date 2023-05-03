@@ -14,7 +14,7 @@ class BackupController {
             this.thread = new BackupThread(this)
             this.thread.setup()
 
-            console.info(`.  OK! O controlador de cópias foi carregado com êxito.      .`)
+            console.info(`.  OK! O controlador de backups foi carregado com êxito.     .`)
         } catch (err) {
             throw err
         }
