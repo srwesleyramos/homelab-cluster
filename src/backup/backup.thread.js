@@ -20,7 +20,7 @@ class BackupThread {
             }
         }
 
-        cached.filter(e => !e.data).forEach(e => e.configure())
+        cached.filter(e => !e.data && !e.isInvalid()).forEach(e => e.configure())
     }
 }
 

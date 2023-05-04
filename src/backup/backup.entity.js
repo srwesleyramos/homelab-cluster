@@ -70,17 +70,17 @@ class BackupEntity {
         }
     }
 
-    async export() {
-        if (this.expires <= Date.now() && this.expires !== 0) {
-            throw new RefusedError('a cópia fornecida já expirou para este servidor.')
-        }
-
+    async update() {
         if (!Helper.exists(this.file)) {
             throw new MissingError('a cópia fornecida não existe para este servidor.')
         }
 
         if (this.data.state_blocked || this.data.state_suspend) {
             throw new RefusedError('o servidor recusou esta operação, tente novamente em breve.')
+        }
+
+        if (this.expires <= Date.now() && this.expires !== 0) {
+            throw new RefusedError('a cópia fornecida já expirou para este servidor.')
         }
 
         try {

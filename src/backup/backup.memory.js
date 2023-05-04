@@ -1,5 +1,5 @@
 const Sqlite = require('sqlite3')
-const Entity = require("./backup.entity");
+const Entity = require("./backup.entity")
 
 class BackupMemory {
 
@@ -87,6 +87,12 @@ class BackupMemory {
 
             this.cached.set(entity.uuid, entity)
         })
+    }
+
+    count(data) {
+        return Array.from(this.cached.values())
+            .filter((i) => i.server === data.server)
+            .reduce((a, e) => a + e.stored, 0)
     }
 
     exists(data) {

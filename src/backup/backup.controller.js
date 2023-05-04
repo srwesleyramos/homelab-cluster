@@ -48,7 +48,7 @@ class BackupController {
         }
 
         const entity = this.memory.restore(data)
-        await entity.export()
+        await entity.update()
 
         return this.memory.update(entity)
     }
