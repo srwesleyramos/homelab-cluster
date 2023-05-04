@@ -50,12 +50,12 @@ class ImageController {
     }
 
     async updateImage(data) {
-        if (data.created || data.updated) {
-            throw new RefusedError('os atributos `created` e `updated` são inalteráveis.')
-        }
-
         if (!this.memory.exists(data)) {
             throw new MissingError('a imagem não está cadastrada no sistema.')
+        }
+
+        if (data.created || data.updated) {
+            throw new RefusedError('os atributos `created` e `updated` são inalteráveis.')
         }
 
         const oldest = this.memory.restore(data)

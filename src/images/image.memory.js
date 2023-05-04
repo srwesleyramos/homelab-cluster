@@ -1,5 +1,5 @@
 const Sqlite = require('sqlite3')
-const Entity = require("./image.entity");
+const Entity = require("./image.entity")
 
 class ImageMemory {
 
