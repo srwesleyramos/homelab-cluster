@@ -20,7 +20,7 @@ class ImageEntity {
      * Área para gerenciamento do modelo
      */
 
-    async create() {
+    create() {
         return new Promise((resolve, reject) => {
             Client.pull(this.name, (err, stream) => {
                 if (err) {

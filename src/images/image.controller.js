@@ -1,8 +1,9 @@
 const ConflictError = require('../errors/conflict.error')
 const ImageEntity = require('./image.entity')
-const ImageMemory = require('./image.memory')
 const MissingError = require('../errors/missing.error')
+const ImageMemory = require('./image.memory')
 const RefusedError = require("../errors/refused.error")
+const ImageThread = require("./image.thread")
 
 class ImageController {
 
@@ -10,6 +11,9 @@ class ImageController {
         try {
             this.memory = new ImageMemory()
             this.memory.setup()
+
+            this.thread = new ImageThread(this)
+            this.thread.setup()
 
             console.info(`.  OK! O controlador de imagens foi carregado com êxito.     .`)
         } catch (err) {
