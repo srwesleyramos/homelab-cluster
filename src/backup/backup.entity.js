@@ -71,7 +71,7 @@ class BackupEntity {
     }
 
     async export() {
-        if (this.expires !== 0 && this.expires <= Date.now()) {
+        if (this.expires <= Date.now() && this.expires !== 0) {
             throw new RefusedError('a cópia fornecida já expirou para este servidor.')
         }
 

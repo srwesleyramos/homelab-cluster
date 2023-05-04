@@ -19,6 +19,8 @@ class BackupThread {
             } catch (ignored) {
             }
         }
+
+        cached.filter(e => !e.data).forEach(e => e.configure())
     }
 }
 
