@@ -1,10 +1,13 @@
 const ServerCache = new Map()
 const ServerModel = require('./server.model')
+const ServerMemory = require("./server.memory")
 
 class ServerController {
 
     async initialize() {
-        console.info(`.  OK! O controlador de servidores foi carregado com êxito.  .`)
+        this.memory = new ServerMemory()
+
+        console.info(`.  OK! O controlador de servers foi carregado com êxito.     .`)
     }
 
     async createServer(data) {
@@ -16,6 +19,8 @@ class ServerController {
         await server.create()
 
         ServerCache.set(server.uuid, server)
+
+        return server
     }
 
     async deleteServer(uuid) {

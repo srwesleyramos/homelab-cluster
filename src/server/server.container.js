@@ -106,8 +106,7 @@ class ServerContainer {
                 Image: this.server.image.name,
                 name: this.server.uuid,
                 OpenStdin: true,
-                Tty: true,
-                User: 'container'
+                Tty: true
             }
 
             client.createContainer(options, (err) => {
@@ -131,7 +130,7 @@ class ServerContainer {
 
         return new Promise((resolve, reject) => {
             container.start((err) => {
-                if (err.reason === 'container already started') {
+                if (err?.reason === 'container already started') {
                     return resolve()
                 }
 
